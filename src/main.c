@@ -92,38 +92,9 @@ void setPWM(TIM_HandleTypeDef timer, uint32_t channel, float freq)
 // }
 
 
-
-
-int main(void)
+void kendrick(void)
 {
-	HAL_Init();
-	SystemClock_Config();
-
-	config.setup(&hGS_CAN);
-	timer_init();
-
-	MX_TIM15_Init();
-	if(HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1) != HAL_OK){
-		Error_Handler();
-	}
-	// if(HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_2) != HAL_OK){
-	// 	Error_Handler();
-	// }
-	// if(HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_3) != HAL_OK){
-	// 	Error_Handler();
-	// }
-	// if(HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_4) != HAL_OK){
-	// 	Error_Handler();
-	// }
-	
-
-	INIT_LIST_HEAD(&hGS_CAN.list_frame_pool);
-	INIT_LIST_HEAD(&hGS_CAN.list_to_host);
-
-	for (unsigned i = 0; i < ARRAY_SIZE(hGS_CAN.msgbuf); i++) {
-		list_add_tail(&hGS_CAN.msgbuf[i].list, &hGS_CAN.list_frame_pool);
-	}
-		//E
+		//E (297ms is 1/8 note)
 		setPWM(htim15, TIM_CHANNEL_1, 660.0);
 		HAL_Delay(297);
 		setPWM(htim15, TIM_CHANNEL_1, 0);
@@ -220,52 +191,54 @@ int main(void)
 		HAL_Delay(10);
 
 		setPWM(htim15, TIM_CHANNEL_1, 740.0);
-		HAL_Delay(297 * 2 + 149);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(149);
-
-		setPWM(htim15, TIM_CHANNEL_1, 740.0);
 		HAL_Delay(297);
 		setPWM(htim15, TIM_CHANNEL_1, 0.0);
 		HAL_Delay(10);
+		for (uint8_t i = 0; i < 2; i++)
+		{
+			setPWM(htim15, TIM_CHANNEL_1, 740.0);
+			HAL_Delay(297);
+			setPWM(htim15, TIM_CHANNEL_1, 0.0);
+			HAL_Delay(10);
 
-		setPWM(htim15, TIM_CHANNEL_1, 740.0);
-		HAL_Delay(297);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(10);
+			setPWM(htim15, TIM_CHANNEL_1, 740.0);
+			HAL_Delay(297);
+			setPWM(htim15, TIM_CHANNEL_1, 0.0);
+			HAL_Delay(10);
 
-		setPWM(htim15, TIM_CHANNEL_1, 784.0);
-		HAL_Delay(297);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(10);
+			setPWM(htim15, TIM_CHANNEL_1, 784.0);
+			HAL_Delay(297);
+			setPWM(htim15, TIM_CHANNEL_1, 0.0);
+			HAL_Delay(10);
 
-		setPWM(htim15, TIM_CHANNEL_1, 740.0);
-		HAL_Delay(297);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(297 * 2);
-
-		setPWM(htim15, TIM_CHANNEL_1, 740.0);
-		HAL_Delay(297);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(10);
-
-		setPWM(htim15, TIM_CHANNEL_1, 740.0);
-		HAL_Delay(297);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(10);
-
-		setPWM(htim15, TIM_CHANNEL_1, 784.0);
-		HAL_Delay(297);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(10);
-
-		setPWM(htim15, TIM_CHANNEL_1, 740.0);
-		HAL_Delay(297 * 2 + 149);
-		setPWM(htim15, TIM_CHANNEL_1, 0.0);
-		HAL_Delay(10);
-
+			setPWM(htim15, TIM_CHANNEL_1, 740.0);
+			HAL_Delay(297);
+			setPWM(htim15, TIM_CHANNEL_1, 0.0);
+			HAL_Delay(297 * 4);
+		}
 
 		HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1); 
+}
+
+int main(void)
+{
+	HAL_Init();
+	SystemClock_Config();
+
+	config.setup(&hGS_CAN);
+	timer_init();
+
+	MX_TIM15_Init();
+	if(HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1) != HAL_OK){
+		Error_Handler();
+	}
+
+	INIT_LIST_HEAD(&hGS_CAN.list_frame_pool);
+	INIT_LIST_HEAD(&hGS_CAN.list_to_host);
+
+	for (unsigned i = 0; i < ARRAY_SIZE(hGS_CAN.msgbuf); i++) {
+		list_add_tail(&hGS_CAN.msgbuf[i].list, &hGS_CAN.list_frame_pool);
+	}
 		
 	for (unsigned int i = 0; i < ARRAY_SIZE(hGS_CAN.channels); i++) {
 		const struct BoardChannelConfig *channel_config = &config.channels[i];
@@ -286,11 +259,7 @@ int main(void)
 			HAL_Delay(50);
 			HAL_GPIO_TogglePin(led_config[LED_TX].port, led_config[LED_TX].pin);
 		}
-
 		
-
-
-
 		led_set_mode(&channel->leds, LED_MODE_OFF);
 
 		can_init(channel, config.channels[i].interface);
@@ -301,6 +270,8 @@ int main(void)
 	USBD_RegisterClass(&hUSB, &USBD_GS_CAN);
 	USBD_GS_CAN_Init(&hGS_CAN, &hUSB);
 	USBD_Start(&hUSB);
+
+	kendrick();
 
 	while (1) {
 		for (unsigned int i = 0; i < ARRAY_SIZE(hGS_CAN.channels); i++) {
